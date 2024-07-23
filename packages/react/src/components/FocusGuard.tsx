@@ -1,8 +1,8 @@
-import {isSafari} from '@floating-ui/react/utils';
+import { isSafari } from '@floating-ui/react/utils';
 import * as React from 'react';
 import useModernLayoutEffect from 'use-isomorphic-layout-effect';
 
-import {createAttribute} from '../utils/createAttribute';
+import { createAttribute } from '../utils/createAttribute';
 
 // See Diego Haz's Sandbox for making this logic work well on Safari/iOS:
 // https://codesandbox.io/s/tabbable-portal-f4tng?file=/src/FocusTrap.tsx
@@ -33,7 +33,7 @@ function setActiveElementOnTab(event: KeyboardEvent) {
 
 export const FocusGuard = React.forwardRef(function FocusGuard(
   props: React.ComponentPropsWithoutRef<'span'>,
-  ref: React.ForwardedRef<HTMLSpanElement>,
+  ref: React.ForwardedRef<HTMLSpanElement>
 ) {
   const [role, setRole] = React.useState<'button' | undefined>();
 
@@ -48,8 +48,20 @@ export const FocusGuard = React.forwardRef(function FocusGuard(
     }
 
     document.addEventListener('keydown', setActiveElementOnTab);
+
+    let current: HTMLSpanElement;
+
+    if (ref && 'current' in ref && ref.current) {
+      current = ref.current;
+      current.addEventListener('focusin', props.onFocus);
+    }
+
     return () => {
       document.removeEventListener('keydown', setActiveElementOnTab);
+
+      if (current) {
+        current.removeEventListener('focusin', props.onFocus);
+      }
     };
   }, []);
 
@@ -61,6 +73,7 @@ export const FocusGuard = React.forwardRef(function FocusGuard(
     'aria-hidden': role ? undefined : true,
     [createAttribute('focus-guard')]: '',
     style: HIDDEN_STYLES,
+    onFocus: null,
   };
 
   return <span {...props} {...restProps} />;
